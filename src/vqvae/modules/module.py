@@ -208,3 +208,52 @@ class VQGAN_G(nn.Module):
         z_q, vq_loss, indices = self.quantizer(z)
         x_recon = self.decoder(z_q)
         return x_recon, vq_loss, indices
+
+
+class PatchDiscriminator(nn.Module):
+    """Spectral norm PatchGAN discriminator compatible with VQGAN.
+
+    Produces a 1 channel logits map (B,1,H',W').
+    """
+
+    def __init__(self, cfg: DictConfig, n_layers: int = 3, use_batchnorm: bool = False):
+        super().__init__()
+
+        def sn_conv(in_ch, out_ch, k=4, s=2, p=1, apply_bn=False):
+            conv = nn.utils.spectral_norm(nn.Conv2d(in_ch, out_ch, k, s, p))
+            layers = [conv]
+            if apply_bn:
+                layers.append(nn.BatchNorm2d(out_ch))
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+            return layers  # list of layers
+
+        layers = []
+
+        # -------- first layer (no BN) --------
+        in_ch = cfg.image_channels
+        out_ch = cfg.start_channels  # 64 or 128
+        layers.extend(sn_conv(in_ch, out_ch, apply_bn=False))
+
+        # -------- intermediate layers ---------
+        for i in range(1, n_layers + 1):
+            in_ch = out_ch
+            out_ch = min(out_ch * 2, 512)  # cap channels if you wish
+            stride = 1 if i == n_layers else 2
+            layers.extend(
+                sn_conv(
+                    in_ch,
+                    out_ch,
+                    k=4,
+                    s=stride,
+                    p=1,
+                    apply_bn=use_batchnorm,
+                )
+            )
+
+        # -------- final 1×1 conv to logits -----
+        layers.append(nn.utils.spectral_norm(nn.Conv2d(out_ch, 1, kernel_size=4, stride=1, padding=1)))
+
+        self.net = nn.Sequential(*layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.net(x)
