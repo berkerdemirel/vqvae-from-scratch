@@ -107,17 +107,17 @@ class ResBlock(nn.Module):
 
 
 class SelfAttention(nn.Module):
-    def __init__(self, ch, n_heads=8):
+    def __init__(self, channels: int, n_heads: int = 8, dropout: float = 0.0):
         super().__init__()
-        self.attn = nn.MultiheadAttention(ch, n_heads, batch_first=True)
-        self.ln = nn.LayerNorm(ch)
+        self.norm = nn.LayerNorm(channels)
+        self.attn = nn.MultiheadAttention(channels, n_heads, dropout=dropout, batch_first=True)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         b, c, h, w = x.shape
-        z = x.view(b, c, -1).permute(0, 2, 1)  # (b, hw, c)
-        z = self.ln(z)
+        z = x.flatten(2).transpose(1, 2)  # (B, HW, C)
+        z = self.norm(z)
         z, _ = self.attn(z, z, z, need_weights=False)
-        z = z.permute(0, 2, 1).view(b, c, h, w)
+        z = z.transpose(1, 2).reshape(b, c, h, w)
         return x + z
 
 

@@ -40,11 +40,11 @@ class VQGANLitModule(pl.LightningModule):
     # ------------------------------ optimizers --------------------------------
     def configure_optimizers(self):
         """Configures the optimizers and learning rate schedulers."""
-        lr = self.cfg.train.lr
+        lr = self.cfg.pl.lr
         opt_g = torch.optim.Adam(self.generator.parameters(), lr=lr, betas=(0.5, 0.9))
         opt_d = torch.optim.Adam(self.discriminator.parameters(), lr=lr, betas=(0.5, 0.9))
 
-        max_steps = self.cfg.train.max_steps
+        max_steps = self.cfg.pl.max_steps
         sch_g = torch.optim.lr_scheduler.CosineAnnealingLR(opt_g, T_max=max_steps)
         sch_d = torch.optim.lr_scheduler.CosineAnnealingLR(opt_d, T_max=max_steps)  # ⬅
 
@@ -64,7 +64,10 @@ class VQGANLitModule(pl.LightningModule):
         – Optionally several D steps per G step
         """
         # ---------------- unpack ----------------
-        images = batch[0]
+        if isinstance(batch, (list, tuple)):
+            images = batch[0]  # take the tensor
+        else:
+            images = batch
         opt_g, opt_d = self.optimizers()
 
         # ====================================================
@@ -109,15 +112,12 @@ class VQGANLitModule(pl.LightningModule):
             },
             prog_bar=True,
         )
-        if (
-            batch_idx == 0
-            and self.logger is not None  # ← guard 1
-            and hasattr(self.logger, "experiment")  # ← guard 2 (TB/W&B only)
-        ):
+        if batch_idx == 0 and self.logger is not None:
             grid = torchvision.utils.make_grid(
                 torch.cat([images[:4], x_hat[:4]], 0), nrow=4, normalize=True, value_range=(-1, 1)
             )
-            self.logger.experiment.add_image("recon", grid, self.current_epoch)
+            # Lightning‑native, works for WandbLogger, TensorBoardLogger, CSVLogger…
+            self.logger.log_image(key="recon", images=[grid], step=self.global_step)
 
         # ====================================================
         # 2. ─────────── DISCRIMINATOR  ──────────────────────
@@ -165,7 +165,10 @@ class VQGANLitModule(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         """Performs a single validation step."""
-        images = batch[0]
+        if isinstance(batch, (list, tuple)):
+            images = batch[0]  # take the tensor
+        else:
+            images = batch
         x_hat, vq_loss, _ = self.generator(images)
 
         recon_loss = F.l1_loss(x_hat, images)

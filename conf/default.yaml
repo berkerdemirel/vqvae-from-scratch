@@ -1,4 +1,8 @@
 defaults:
+  - logger: logger
+  - callbacks: callbacks
+  - trainer: trainer
+  - train: train
   - dataset: dataset
   - datamodule: datamodule
   - model: model
