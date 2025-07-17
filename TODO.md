@@ -125,8 +125,11 @@ Create `tests/` with one test per component.
 from omegaconf import OmegaConf
 from src.dataset import ImageNetDataset
 
+
 def test_dataset_len():
-    cfg = OmegaConf.create({"dir_train": "dummy", "dir_val": "dummy", "resolution": 256, "augment": {}})
+    cfg = OmegaConf.create(
+        {"dir_train": "dummy", "dir_val": "dummy", "resolution": 256, "augment": {}}
+    )
     ds = ImageNetDataset(cfg, train=False)
     assert len(ds) == 0  # placeholder until data mounted
 ```
@@ -136,8 +139,13 @@ def test_dataset_len():
 from omegaconf import OmegaConf
 from src.datamodule import ImageNetDM
 
+
 def test_dataloaders():
-    dm = ImageNetDM(OmegaConf.create({"batch_size": 2, "num_workers": 0, "pin_memory": False, "shuffle": False}))
+    dm = ImageNetDM(
+        OmegaConf.create(
+            {"batch_size": 2, "num_workers": 0, "pin_memory": False, "shuffle": False}
+        )
+    )
     dm.setup(None)
     loader = dm.train_dataloader()
     assert loader.batch_size == 2
@@ -149,8 +157,17 @@ import torch
 from omegaconf import OmegaConf
 from src.model import VQGAN_G
 
+
 def test_forward():
-    cfg = OmegaConf.create({"embedding_dim": 256, "codebook_size": 1024, "channel_base": 64, "channel_max": 256, "f_downsample": 16})
+    cfg = OmegaConf.create(
+        {
+            "embedding_dim": 256,
+            "codebook_size": 1024,
+            "channel_base": 64,
+            "channel_max": 256,
+            "f_downsample": 16,
+        }
+    )
     net = VQGAN_G(cfg)
     x = torch.randn(1, 3, 256, 256)
     rec, _, _ = net(x)
@@ -163,12 +180,25 @@ import torch
 from omegaconf import OmegaConf
 from src.pl_module import VQGAN
 
-cfg = OmegaConf.create({
-    "model": {"embedding_dim": 256, "codebook_size": 1024, "channel_base": 64, "channel_max": 256, "f_downsample": 16, "beta": 0.25, "lambda_rec": 1.0, "lambda_perc": 1.0, "lambda_gan": 0.1},
-    "pl": {"lr": 1e-4, "lr_d": 1e-4, "betas": [0.5, 0.9]}
-})
+cfg = OmegaConf.create(
+    {
+        "model": {
+            "embedding_dim": 256,
+            "codebook_size": 1024,
+            "channel_base": 64,
+            "channel_max": 256,
+            "f_downsample": 16,
+            "beta": 0.25,
+            "lambda_rec": 1.0,
+            "lambda_perc": 1.0,
+            "lambda_gan": 0.1,
+        },
+        "pl": {"lr": 1e-4, "lr_d": 1e-4, "betas": [0.5, 0.9]},
+    }
+)
 
 plm = VQGAN(cfg)
+
 
 def test_step():
     imgs = torch.randn(2, 3, 256, 256)
@@ -204,4 +234,3 @@ Add a minimal GitHub Action `python -m pytest -q` to ensure tests run on pushes.
 10. Train autoregressive transformer on code indices (separate module).
 
 ---
-

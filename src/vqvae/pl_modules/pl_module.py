@@ -7,10 +7,9 @@ import omegaconf
 import torch
 import torch.nn.functional as F
 import torchmetrics
-from torch.optim import Optimizer
-
 from nn_core.common import PROJECT_ROOT
 from nn_core.model_logging import NNLogger
+from torch.optim import Optimizer
 
 from vqvae.data.datamodule import MetaData
 

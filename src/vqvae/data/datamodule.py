@@ -6,13 +6,12 @@ from typing import List, Mapping, Optional
 import hydra
 import lightning.pytorch as pl
 import omegaconf
+from nn_core.common import PROJECT_ROOT
+from nn_core.nn_types import Split
 from omegaconf import DictConfig
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.dataloader import default_collate
 from tqdm import tqdm
-
-from nn_core.common import PROJECT_ROOT
-from nn_core.nn_types import Split
 
 pylogger = logging.getLogger(__name__)
 
