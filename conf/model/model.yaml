@@ -1,0 +1,10 @@
+embedding_dim:   256   # z_dim
+codebook_size:   8192  # K
+beta:            0.25  # commitment cost
+n_res_blocks:    2
+channel_base:    128
+channel_max:     512
+f_downsample:    16     # 4 downsamples (256→16)
+lambda_rec:      1.0
+lambda_perc:     1.0
+lambda_gan:      0.1

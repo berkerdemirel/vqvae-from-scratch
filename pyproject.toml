@@ -1,7 +1,77 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vqvae-from-scratch"
+version = "0.0.1"
+authors = [
+  { name="Berker Demirel", email="berker.demirel@gmail.com" },
+]
+description = "A VQGAN implementation from scratch."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "torch",
+    "torchvision",
+    "torchaudio",
+    "pytorch-lightning",
+    "hydra-core",
+    "wandb",
+    "lpips",
+    "einops",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+dev = [
+    "jinja2",
+    "rich",
+    "pre-commit",
+    "pytest",
+    "ruff",
+    "black",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/berkerdemirel/vqvae-from-scratch"
+"Bug Tracker" = "https://github.com/berkerdemirel/vqvae-from-scratch/issues"
+
+[tool.black]
+line-length = 120
+include = '\.pyi?$'
+
+[tool.ruff]
+line-length = 88
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.ruff.isort]
+known-first-party = ["vqvae"]
+
 [tool.pytest.ini_options]
 minversion = "6.2"
 addopts = "-ra"
 testpaths = ["tests"]
+pythonpath = [
+  "src"
+]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -11,20 +81,9 @@ exclude_lines = [
     "if __name__ == .__main__.:",
 ]
 
-[tool.black]
-line-length = 120
-include = '\.pyi?$'
-
 [tool.mypy]
 files= ["src/**/*.py", "test/*.py"]
 ignore_missing_imports = true
-
-[tool.isort]
-profile = 'black'
-line_length = 120
-known_third_party = ["numpy", "pytest", "wandb", "torch"]
-known_first_party = ["nn_core"]
-known_local_folder = "vqvae"
 
 [tool.pydocstyle]
 convention = 'google'
@@ -37,7 +96,3 @@ skips = ["B101"]
 [tool.setuptools_scm]
 write_to = "src/vqvae/_version.py"
 write_to_template = '__version__ = "{version}"'
-
-[build-system]
-requires = ["setuptools==59.5", "wheel", "setuptools_scm[toml]>=6.3.1"]
-build-backend = "setuptools.build_meta"

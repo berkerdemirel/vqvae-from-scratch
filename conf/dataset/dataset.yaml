@@ -1,0 +1,6 @@
+dir_train: /nfs/scistore19/locatgrp/bdemirel/data/imagenet/train
+dir_val:   /nfs/scistore19/locatgrp/bdemirel/data/imagenet/val
+resolution: 256
+augment:
+  horizontal_flip: true
+  random_crop: true
