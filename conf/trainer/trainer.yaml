@@ -3,4 +3,4 @@ accelerator: "gpu"
 devices: "auto"
 max_epochs: 100
 max_steps: -1
-strategy: ddp_find_unused_parameters_true 
+strategy: ddp_find_unused_parameters_true

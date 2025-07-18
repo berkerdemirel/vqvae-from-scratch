@@ -33,7 +33,7 @@ class VQGANLitModule(pl.LightningModule):
 
         self.automatic_optimization = False  # We need manual optimization for GANs
 
-    # ------------------------------ device hook ------------------------------⬅
+    # ------------------------------ device hook ------------------------------
     def setup(self, stage=None):
         self.perceptual_loss.to(self.device)
 
@@ -46,7 +46,7 @@ class VQGANLitModule(pl.LightningModule):
 
         max_steps = self.cfg.pl.max_steps
         sch_g = torch.optim.lr_scheduler.CosineAnnealingLR(opt_g, T_max=max_steps)
-        sch_d = torch.optim.lr_scheduler.CosineAnnealingLR(opt_d, T_max=max_steps)  # ⬅
+        sch_d = torch.optim.lr_scheduler.CosineAnnealingLR(opt_d, T_max=max_steps)
 
         return (
             [opt_g, opt_d],
@@ -57,8 +57,8 @@ class VQGANLitModule(pl.LightningModule):
         )
 
     def training_step(self, batch, batch_idx):
-        """
-        Manual‑opt training step for VQ‑GAN
+        """Manual‑opt training step for VQ‑GAN.
+
         – LPIPS in no‑grad
         – Grad‑stabilised discriminator (hinge + optional R1)
         – Optionally several D steps per G step
@@ -93,6 +93,9 @@ class VQGANLitModule(pl.LightningModule):
         )
 
         self.manual_backward(total_g)
+        # unused_g = [n for n, p in self.named_parameters() if p.requires_grad and p.grad is None]
+        # if unused_g:
+        #     print(f"[rank {self.global_rank}]  G‑unused →", unused_g[:10])
         g_grad_norm = torch.nn.utils.clip_grad_norm_(self.generator.parameters(), 1.0)
         opt_g.step()
         opt_g.zero_grad()
@@ -149,6 +152,10 @@ class VQGANLitModule(pl.LightningModule):
             d_grad_norm = torch.nn.utils.clip_grad_norm_(  # inf → no clipping
                 self.discriminator.parameters(), max_norm=float("inf")
             )
+            # unused_d = [n for n, p in self.named_parameters() if p.requires_grad and p.grad is None]
+            # if unused_d:
+            #     print(f"[rank {self.global_rank}]  D‑unused →", unused_d[:10])
+
             opt_d.step()
             opt_d.zero_grad()
             self.untoggle_optimizer(opt_d)
@@ -161,7 +168,7 @@ class VQGANLitModule(pl.LightningModule):
             prog_bar=True,
         )
 
-        return total_g.detach()
+        return None  # total_g.detach()
 
     def validation_step(self, batch, batch_idx):
         """Performs a single validation step."""
