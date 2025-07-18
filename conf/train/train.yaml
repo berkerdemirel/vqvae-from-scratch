@@ -1,0 +1,8 @@
+
+# Other training parameters
+seed: 42
+monitor: "val/recon_loss"
+monitor_mode: "min"
+ckpt_path: null
+test_after_training: false
+name: "vqgan-from-scratch"

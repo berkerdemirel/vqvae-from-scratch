@@ -1,0 +1,5 @@
+_target_: pytorch_lightning.loggers.WandbLogger
+project: "vqgan-from-scratch"
+name: ${train.name}
+save_dir: "."
+log_model: true
