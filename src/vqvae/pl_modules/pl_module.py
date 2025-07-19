@@ -31,7 +31,7 @@ class VQGANLitModule(pl.LightningModule):
         # Loss functions
         self.perceptual_loss = lpips.LPIPS(net="vgg").eval().requires_grad_(False)
         self.disc_start = getattr(cfg.pl.loss, "disc_start", 250_001)  # default = paper
-
+        self.disc_step_count = 0
         self.automatic_optimization = False  # We need manual optimization for GANs
 
     # ------------------------------ device hook ------------------------------
@@ -86,13 +86,12 @@ class VQGANLitModule(pl.LightningModule):
             p_loss = self.perceptual_loss(x_hat, images).mean()
 
         # ---- skip GAN loss until disc_start ----
-        if self.global_step < self.disc_start:
+        if self.disc_step_count < self.disc_start:
             g_adv = torch.zeros(1, device=self.device)
             train_disc = False
         else:
             g_adv = -self.discriminator(x_hat).mean()
             train_disc = True
-
         total_g = (
             self.cfg.pl.loss.recon_weight * recon_loss
             + self.cfg.pl.loss.perceptual_weight * p_loss
@@ -137,8 +136,8 @@ class VQGANLitModule(pl.LightningModule):
         # 2. ─────────── DISCRIMINATOR  ──────────────────────
         # ====================================================
         if train_disc:
-            d_steps = getattr(self.cfg.train, "d_steps", 1)
-            r1_every = getattr(self.cfg.train, "r1_every", 16)
+            d_steps = getattr(self.cfg, "d_steps", 1)
+            r1_every = getattr(self.cfg, "r1_every", 16)
             r1_weight = self.cfg.pl.loss.get("r1_weight", 0.0)
 
             for _ in range(d_steps):
@@ -180,7 +179,7 @@ class VQGANLitModule(pl.LightningModule):
                 prog_bar=True,
                 sync_dist=True,
             )
-
+        self.disc_step_count += 1
         return None  # total_g.detach()
 
     def validation_step(self, batch, batch_idx):

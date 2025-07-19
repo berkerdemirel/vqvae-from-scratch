@@ -31,4 +31,4 @@ cfg:
       perceptual_weight:   1.0
       vq_weight:           1.0
       adversarial_weight:  0.8
-      disc_start:          250_001
+      disc_start:          10_000
