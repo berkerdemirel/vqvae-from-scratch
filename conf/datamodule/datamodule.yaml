@@ -1,5 +1,21 @@
-batch_size:  24
-num_workers: 1
-pin_memory:  true
-shuffle:     true
-persistent_workers: true
+# conf/datamodule.yaml
+_target_: vqvae.data.datamodule.ImageNetDM
+
+datamodule_cfg:
+  batch_size: 64
+  num_workers: 8
+  pin_memory: true
+  persistent_workers: true
+  shuffle: true
+
+train_dataset:
+  _target_: vqvae.data.dataset.ImageNetDataset
+  _recursive_: false
+  cfg: ${dataset}
+  train: true
+
+val_dataset:
+  _target_: vqvae.data.dataset.ImageNetDataset
+  _recursive_: false
+  cfg: ${dataset}
+  train: false

@@ -53,9 +53,12 @@ class VectorQuantizer(nn.Module):
 
         # Calculate distances using torch.cdist for efficiency and stability
         with torch.amp.autocast(str(z.device), enabled=False):
-            distances = torch.cdist(z_flat, self.embedding.weight, p=2).pow(2)
-            if distances.dtype in (torch.bfloat16, torch.float16):
-                distances = distances + 1e-4  # numerical guard
+            z_flat_fp32 = z_flat.float()
+            embedding_fp32 = self.embedding.weight.float()
+            distances = torch.cdist(z_flat_fp32, embedding_fp32, p=2).pow(2)
+            # distances = torch.cdist(z_flat, self.embedding.weight, p=2).pow(2)
+            # if distances.dtype in (torch.bfloat16, torch.float16):
+            # distances = distances + 1e-4  # numerical guard
 
         # Find the closest codebook vectors
         min_encoding_indices = torch.argmin(distances, dim=1)
@@ -134,8 +137,9 @@ class Encoder(nn.Module):
     def __init__(self, cfg: DictConfig):
         super().__init__()
         ch = cfg.start_channels  # 128 by default
-        ch_mult = [1, 2, 4, 4]  # per level
-        n_res = 3  # blocks per level
+        # ch_mult = [1, 2, 4, 4]  # per level
+        ch_mult = [1, 1, 2, 2, 4]  # five levels
+        n_res = 2  # blocks per level
 
         layers = [nn.Conv2d(cfg.image_channels, ch, 3, 1, 1)]
         in_ch = ch
@@ -158,28 +162,33 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, cfg: DictConfig):
         super().__init__()
-        ch = cfg.start_channels
-        ch_mult = [4, 4, 2, 1]
-        n_res = 3
+        ch = cfg.start_channels  # 128
+        ch_mult = [4, 2, 2, 1, 1]  # mirror of encoder
+        n_res = 2  # mirror of encoder
 
         layers = [nn.Conv2d(cfg.embedding_dim, ch * ch_mult[0], 3, 1, 1)]
-        in_ch = ch * ch_mult[0]
-        layers.append(SelfAttention(in_ch))
+        in_ch = ch * ch_mult[0]  # 512 when ch=128
 
+        layers.append(SelfAttention(in_ch))  # 16×16 attention
+
+        # main up‑sampling stack
         for i, mult in enumerate(ch_mult):
             out_ch = ch * mult
             for _ in range(n_res):
                 layers.append(ResBlock(in_ch, out_ch))
                 in_ch = out_ch
-            if i < len(ch_mult) - 1:
-                layers.append(Up(in_ch, in_ch // 2))
-                in_ch = in_ch // 2
+            if i < len(ch_mult) - 1:  # add 4 up‑samplers
+                next_out_ch = ch * ch_mult[i + 1]
+                layers.append(Up(in_ch, next_out_ch))
+                in_ch = next_out_ch
 
+        # final 3‑×‑3 conv to RGB and tanh
         layers.append(GNConv(in_ch, cfg.image_channels, k=3))
-        layers.append(nn.Tanh())  # for normalized images
+        layers.append(nn.Tanh())
+
         self.net = nn.Sequential(*layers)
 
-    def forward(self, z_q):
+    def forward(self, z_q: torch.Tensor) -> torch.Tensor:
         return self.net(z_q)
 
 

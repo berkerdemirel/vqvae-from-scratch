@@ -20,7 +20,7 @@ class ImageNetDataset(Dataset):
         """
         super().__init__()
         self.cfg = cfg
-        root_dir = self.cfg.dir_train if train else self.cfg.dir_val
+        root_dir = cfg.dir_train if train else cfg.dir_val
 
         if train and self.cfg.augment:
             # Training transforms with augmentations

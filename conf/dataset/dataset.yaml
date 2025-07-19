@@ -1,5 +1,6 @@
-dir_train: /nfs/scistore19/locatgrp/bdemirel/data/imagenet/train
-dir_val:   /nfs/scistore19/locatgrp/bdemirel/data/imagenet/val
+# conf/dataset.yaml  (this **is** the cfg mapping)
+dir_train: ~/data/imagenet/train
+dir_val:   ~/data/imagenet/val
 resolution: 256
 augment:
   horizontal_flip: true
