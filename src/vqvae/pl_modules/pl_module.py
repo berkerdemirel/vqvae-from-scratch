@@ -137,7 +137,6 @@ class VQGANLitModule(pl.LightningModule):
         # 2. ─────────── DISCRIMINATOR  ──────────────────────
         # ====================================================
         if train_disc:
-
             d_steps = getattr(self.cfg.train, "d_steps", 1)
             r1_every = getattr(self.cfg.train, "r1_every", 16)
             r1_weight = self.cfg.pl.loss.get("r1_weight", 0.0)

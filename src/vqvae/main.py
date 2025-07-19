@@ -1,5 +1,3 @@
-import os
-
 import hydra
 
 # isort: off
@@ -7,7 +5,6 @@ import vqvae.quiet as _quiet  # must run before pl to set warning filters
 
 # isort: on
 import pytorch_lightning as pl
-import torch
 from omegaconf import DictConfig
 
 
