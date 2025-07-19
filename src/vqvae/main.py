@@ -1,7 +1,7 @@
 import hydra
 
 # isort: off
-import vqvae.quiet as _quiet  # must run before pl to set warning filters
+import vqvae.quiet as _quiet  # noqa: F401
 
 # isort: on
 import pytorch_lightning as pl
